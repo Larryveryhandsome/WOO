@@ -1,0 +1,165 @@
+/* 全局樣式 */
+body {
+    font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
+    line-height: 1.6;
+    color: #333;
+    padding-top: 76px;
+}
+
+/* 導航欄樣式 */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+/* 主要內容區域 */
+.main-content {
+    padding: 20px 0;
+}
+
+.section {
+    margin-bottom: 40px;
+    padding: 20px 0;
+}
+
+.section h1 {
+    color: #2c3e50;
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+.section h2 {
+    color: #34495e;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.section h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+/* 卡片樣式 */
+.card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card-body {
+    padding: 20px;
+}
+
+/* 列表樣式 */
+ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+ul li {
+    margin-bottom: 10px;
+    padding-left: 20px;
+    position: relative;
+}
+
+ul li:before {
+    content: "•";
+    color: #3498db;
+    position: absolute;
+    left: 0;
+}
+
+/* 手風琴樣式 */
+.accordion-button:not(.collapsed) {
+    background-color: #e3f2fd;
+    color: #2c3e50;
+}
+
+.accordion-button:focus {
+    box-shadow: none;
+    border-color: rgba(0,0,0,.125);
+}
+
+/* 頁腳樣式 */
+.footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .section {
+        padding: 15px 0;
+    }
+    
+    .card {
+        margin-bottom: 20px;
+    }
+    
+    .section h1 {
+        font-size: 1.8rem;
+    }
+    
+    .section h2 {
+        font-size: 1.5rem;
+    }
+    
+    .section h3 {
+        font-size: 1.3rem;
+    }
+}
+
+/* 動畫效果 */
+.card, .accordion-item {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 自定義顏色 */
+.bg-primary {
+    background-color: #3498db !important;
+}
+
+.text-primary {
+    color: #3498db !important;
+}
+
+/* 表格樣式 */
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+/* 按鈕樣式 */
+.btn-primary {
+    background-color: #3498db;
+    border-color: #3498db;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+} 
