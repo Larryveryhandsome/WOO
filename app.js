@@ -3,8 +3,8 @@
 
 const FEED_HOST = 'https://hornydragon.blogspot.com';
 const FIRST_BATCH = 25;       // small first request so the UI shows up fast
-const BATCH = 100;            // posts per subsequent JSONP request
-const MAX_POSTS = 9000;       // hard ceiling
+const BATCH = 150;            // posts per subsequent JSONP request
+const MAX_POSTS = 50000;      // effectively unlimited for this blog
 const PRELOAD_AHEAD = 4;      // how many upcoming images to preload
 const STACK_VISIBLE = 3;      // how many cards rendered at once
 const IMG_SIZE = 's1200';     // big enough for retina, smaller than s1600
@@ -32,7 +32,7 @@ function jsonp(url) {
         const sep = url.includes('?') ? '&' : '?';
         const script = document.createElement('script');
         const cleanup = () => { delete window[cb]; script.remove(); };
-        const timer = setTimeout(() => { cleanup(); reject(new Error('JSONP timeout')); }, 20000);
+        const timer = setTimeout(() => { cleanup(); reject(new Error('JSONP timeout')); }, 25000);
         window[cb] = (data) => { clearTimeout(timer); cleanup(); resolve(data); };
         script.onerror = () => { clearTimeout(timer); cleanup(); reject(new Error('JSONP load error')); };
         script.src = url + sep + 'callback=' + cb;
@@ -42,13 +42,23 @@ function jsonp(url) {
 
 async function fetchBatch(startIndex, max) {
     const url = `${FEED_HOST}/feeds/posts/default?alt=json-in-script&max-results=${max}&start-index=${startIndex}`;
-    const data = await jsonp(url);
-    return data?.feed?.entry ?? [];
+    // One retry with a small backoff — Blogger occasionally 500s on big pages
+    try {
+        const data = await jsonp(url);
+        return data?.feed?.entry ?? [];
+    } catch (err) {
+        console.warn('JSONP failed, retrying', startIndex, err);
+        await new Promise(r => setTimeout(r, 1500));
+        const data = await jsonp(url);
+        return data?.feed?.entry ?? [];
+    }
 }
 
-// Pull all the *bigger* image variants out of an HTML blob.
-// Blogger image URLs look like: https://blogger.googleusercontent.com/img/.../s320/foo.jpg
-// or https://1.bp.blogspot.com/.../s640/foo.jpg . We bump them to /s1600/ for quality.
+// Pull image URLs out of an HTML blob. Accepts Blogger's own CDN plus
+// a few external hosts that appear frequently in older posts (imgur etc.).
+const IMG_HOST_RE = /(blogspot\.com|googleusercontent\.com|imgur\.com|pbs\.twimg\.com|media\.tenor\.com|redd\.it|reddit\.com)/i;
+const IMG_EXT_RE = /\.(jpe?g|png|gif|webp)(\?|$)/i;
+
 function extractImages(html) {
     if (!html) return [];
     const urls = new Set();
@@ -56,13 +66,12 @@ function extractImages(html) {
     for (const img of doc.querySelectorAll('img')) {
         const src = img.getAttribute('src');
         if (!src) continue;
-        if (!/blogspot\.com|googleusercontent\.com/.test(src)) continue;
+        if (!IMG_HOST_RE.test(src)) continue;
         urls.add(upscale(src));
     }
-    // Anchor href to a larger version (Blogger wraps img in <a>)
     for (const a of doc.querySelectorAll('a')) {
         const href = a.getAttribute('href') || '';
-        if (/(blogspot\.com|googleusercontent\.com).*\.(jpe?g|png|gif|webp)/i.test(href)) {
+        if (IMG_HOST_RE.test(href) && IMG_EXT_RE.test(href)) {
             urls.add(upscale(href));
         }
     }
@@ -129,6 +138,7 @@ const $ = (sel) => document.querySelector(sel);
 const stack = $('#card-stack');
 const statusEl = $('#status');
 const loadedInfo = $('#loaded-info');
+const progressEl = $('#progress');
 const countLikedEl  = $('#count-liked');
 const countPassedEl = $('#count-passed');
 
@@ -138,9 +148,21 @@ function updateCounters() {
     countPassedEl.textContent = passed.length;
 }
 function updateLoadedInfo() {
-    loadedInfo.textContent = `已從部落格載入 ${totalLoaded} 篇文章` +
+    const line = `已從部落格載入 ${totalLoaded} 篇文章` +
         (exhausted ? '（全部完成）' : '（仍在繼續抓取…）') +
         ` ・ 待看 ${queue.length} 張`;
+    loadedInfo.textContent = line;
+    if (progressEl) {
+        if (exhausted && queue.length === 0) {
+            progressEl.hidden = true;
+        } else if (exhausted) {
+            progressEl.textContent = `🎉 已全部抓完 ${totalLoaded} 篇`;
+            progressEl.hidden = false;
+        } else {
+            progressEl.textContent = `📥 已抓 ${totalLoaded} 篇・待看 ${queue.length}`;
+            progressEl.hidden = false;
+        }
+    }
 }
 
 // ----- card rendering -----
