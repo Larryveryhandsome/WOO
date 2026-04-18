@@ -199,10 +199,12 @@ function makeCardEl(card, depth) {
     div.innerHTML = `
         <img class="card-img" src="${card.img}" alt="" draggable="false">
         <div class="img-fallback">圖片載入失敗，自動跳過…</div>
-        <div class="card-overlay">
-            <div class="card-title">${escapeHtml(card.title || '(無標題)')}</div>
-            <a class="card-link" href="${card.post}" target="_blank" rel="noopener" onclick="event.stopPropagation()">查看原文 ↗</a>
-        </div>
+        <a class="card-open" href="${card.post}" target="_blank" rel="noopener"
+           title="${escapeHtml(card.title || '(無標題)')}"
+           aria-label="開啟原文"
+           onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()">
+            <svg viewBox="0 0 24 24" width="16" height="16"><path d="M7 17L17 7M9 7h8v8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+        </a>
         <div class="stamp stamp-like">LIKE</div>
         <div class="stamp stamp-pass">NOPE</div>
     `;
