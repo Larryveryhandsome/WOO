@@ -1,24 +1,41 @@
-/* Meme Swipe — Tinder-style UI */
+/* Meme Swipe — Tinder-style mobile-first UI */
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 :root {
-    --bg: #0f0f17;
-    --bg-elev: #1a1a26;
-    --fg: #f4f4f8;
-    --muted: #8b8ba0;
-    --like: #ff5d8f;
-    --pass: #4f9eff;
-    --warn: #ff7a59;
-    --card-radius: 18px;
-    --shadow: 0 10px 40px rgba(0, 0, 0, 0.55);
+    --bg: #fafafa;
+    --bg-elev: #ffffff;
+    --fg: #1c1c1e;
+    --muted: #8e8e93;
+    --line: rgba(0, 0, 0, 0.06);
+    --like: #00d68f;       /* Tinder green */
+    --pass: #ff4458;       /* Tinder red */
+    --info: #3aabff;
+    --warn: #ffb53d;
+    --card-radius: 16px;
+    --shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+    --shadow-strong: 0 10px 40px rgba(0, 0, 0, 0.18);
+    --topbar-h: 52px;
+    --actions-h: 96px;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #0f0f17;
+        --bg-elev: #1a1a26;
+        --fg: #f4f4f8;
+        --muted: #8b8ba0;
+        --line: rgba(255, 255, 255, 0.08);
+        --shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+        --shadow-strong: 0 10px 40px rgba(0, 0, 0, 0.6);
+    }
 }
 
 html, body {
     margin: 0;
     padding: 0;
     height: 100%;
-    background: radial-gradient(1200px 800px at 20% -10%, #1d1d33 0%, var(--bg) 60%) fixed;
+    background: var(--bg);
     color: var(--fg);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC",
                  "Noto Sans TC", "Microsoft JhengHei", Roboto, sans-serif;
@@ -32,46 +49,61 @@ a { color: inherit; }
 .topbar {
     position: fixed;
     top: 0; left: 0; right: 0;
-    padding: 0 14px;
+    padding: 0 12px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: linear-gradient(to bottom, rgba(15,15,23,0.95), rgba(15,15,23,0.7));
-    backdrop-filter: blur(10px);
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
     z-index: 50;
     padding-top: env(safe-area-inset-top);
-    height: calc(56px + env(safe-area-inset-top));
+    height: calc(var(--topbar-h) + env(safe-area-inset-top));
 }
-.brand { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.brand {
+    display: flex; align-items: center; gap: 6px;
+    font-weight: 700; font-size: 17px; letter-spacing: 0.5px;
+}
 .logo { font-size: 22px; }
-.brand-text { letter-spacing: 0.5px; }
-.counters { display: flex; gap: 8px; }
-.chip {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 6px 12px; border-radius: 999px;
-    background: var(--bg-elev);
+
+.icon-btn {
+    position: relative;
+    width: 40px; height: 40px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: none;
+    background: transparent;
     color: var(--fg);
-    border: 1px solid rgba(255,255,255,0.07);
-    font-size: 14px; font-weight: 600;
+    border-radius: 50%;
     cursor: pointer;
 }
-.chip:active { transform: scale(0.96); }
-.chip-like { color: var(--like); }
-.chip-pass { color: var(--pass); }
-.chip-menu { padding: 6px 10px; }
+.icon-btn:active { background: var(--line); }
+.liked-btn { color: var(--pass); }
+.liked-badge {
+    position: absolute;
+    top: 2px; right: -2px;
+    min-width: 18px; height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--pass);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+}
+.liked-badge:empty,
+.liked-badge:is([data-empty="true"]) { display: none; }
 
 /* ===== Stage ===== */
 .stage {
     position: absolute;
-    top: calc(56px + env(safe-area-inset-top));
+    top: calc(var(--topbar-h) + env(safe-area-inset-top));
     left: 0; right: 0;
     bottom: env(safe-area-inset-bottom);
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 12px;
-    gap: 12px;
+    padding: 10px 12px 12px;
+    gap: 10px;
 }
 
 .status {
@@ -82,172 +114,182 @@ a { color: inherit; }
     font-size: 15px;
     text-align: center;
     pointer-events: none;
+    padding: 0 24px;
 }
 
 /* ===== Card stack ===== */
 .card-stack {
     position: relative;
-    width: min(420px, 92vw);
-    height: min(640px, calc(100vh - 220px));
-    flex: 0 0 auto;
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: 480px;
+    min-height: 0; /* allow shrink in flex */
 }
 
 .card {
     position: absolute;
     inset: 0;
-    background: var(--bg-elev);
+    background: #000;
     border-radius: var(--card-radius);
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-strong);
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
     user-select: none;
     touch-action: none;
     transition: transform 0.32s cubic-bezier(.2,.7,.3,1.2),
                 opacity 0.32s ease;
-    transform-origin: center 130%;
     will-change: transform, opacity;
 }
-/* Stacked depth: each lower card scales/translates a bit */
 .card[data-depth="0"] { z-index: 3; transform: translateY(0) scale(1); }
-.card[data-depth="1"] { z-index: 2; transform: translateY(10px) scale(0.96); }
-.card[data-depth="2"] { z-index: 1; transform: translateY(20px) scale(0.92); }
-
+.card[data-depth="1"] { z-index: 2; transform: translateY(8px) scale(0.97); }
+.card[data-depth="2"] { z-index: 1; transform: translateY(16px) scale(0.94); }
 .card.dragging { transition: none; cursor: grabbing; }
 
-.card-img-wrap {
-    flex: 1 1 auto;
-    position: relative;
-    background: #000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
 .card-img {
-    max-width: 100%;
-    max-height: 100%;
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: contain;          /* keep entire meme visible */
     pointer-events: none;
+    background: #000;
 }
 .img-fallback {
     display: none;
-    color: var(--muted);
+    position: absolute;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.7);
     font-size: 14px;
 }
-.card-img-wrap.img-failed .card-img { display: none; }
-.card-img-wrap.img-failed .img-fallback { display: block; }
+.card.img-failed .card-img { display: none; }
+.card.img-failed .img-fallback { display: flex; }
 
-.card-meta {
-    flex: 0 0 auto;
-    padding: 10px 14px;
-    background: rgba(0,0,0,0.4);
-    backdrop-filter: blur(6px);
+.card-overlay {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    padding: 28px 18px 16px;
+    background: linear-gradient(to top,
+                rgba(0,0,0,0.85) 0%,
+                rgba(0,0,0,0.6) 40%,
+                rgba(0,0,0,0) 100%);
+    color: #fff;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: space-between;
     gap: 12px;
-    font-size: 13px;
 }
 .card-title {
     flex: 1;
-    color: var(--fg);
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    /* clamp to 2 lines */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-weight: 600;
 }
 .card-link {
-    color: var(--muted);
+    flex: 0 0 auto;
+    color: rgba(255,255,255,0.9);
     text-decoration: none;
     font-size: 12px;
-    flex: 0 0 auto;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(6px);
+    white-space: nowrap;
 }
-.card-link:hover { color: var(--fg); }
 
-/* Like / Pass stamps */
+/* ===== Stamps (LIKE / NOPE) ===== */
 .stamp {
     position: absolute;
-    top: 32px;
-    padding: 8px 18px;
-    font-size: 28px;
+    top: 28px;
+    padding: 6px 16px;
+    font-size: 36px;
     font-weight: 900;
-    border: 4px solid currentColor;
-    border-radius: 8px;
+    border: 5px solid currentColor;
+    border-radius: 10px;
     letter-spacing: 4px;
     pointer-events: none;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 .stamp-like {
     right: 24px;
     color: var(--like);
     opacity: var(--like-opacity, 0);
-    transform: rotate(-12deg);
+    transform: rotate(-14deg);
 }
 .stamp-pass {
     left: 24px;
     color: var(--pass);
     opacity: var(--pass-opacity, 0);
-    transform: rotate(12deg);
+    transform: rotate(14deg);
 }
 
 /* ===== Action buttons ===== */
 .actions {
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 22px;
-    margin-top: 4px;
+    gap: 18px;
+    padding: 4px 0;
 }
 .action-btn {
-    width: 64px;
-    height: 64px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     border: none;
     background: var(--bg-elev);
     color: var(--fg);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    box-shadow: var(--shadow);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: transform 0.15s ease;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .action-btn:active { transform: scale(0.92); }
 .action-pass { color: var(--pass); }
-.action-like { color: var(--like); }
-.action-undo { width: 48px; height: 48px; color: var(--warn); }
+.action-like { color: var(--like); width: 64px; height: 64px; }
+.action-undo { width: 46px; height: 46px; color: var(--warn); }
 
 .hint {
+    flex: 0 0 auto;
     color: var(--muted);
-    font-size: 12px;
+    font-size: 11px;
     text-align: center;
-    margin-bottom: 8px;
+    margin-top: 2px;
+}
+@media (hover: none) and (pointer: coarse) {
+    .hint { display: none; }      /* keyboard hints useless on phones */
 }
 
 /* ===== Modal (gallery / menu) ===== */
 .modal {
     position: fixed;
     inset: 0;
-    background: rgba(8, 8, 14, 0.96);
-    backdrop-filter: blur(8px);
+    background: var(--bg);
     z-index: 100;
     display: flex;
     flex-direction: column;
     padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
 }
 .modal[hidden] { display: none; }
 .modal.small {
     inset: auto;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    width: min(420px, 92vw);
+    width: min(440px, 92vw);
     max-height: 80vh;
     border-radius: 16px;
     background: var(--bg-elev);
-    box-shadow: var(--shadow);
-    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: var(--shadow-strong);
+    border: 1px solid var(--line);
     overflow: auto;
 }
 .modal-head {
@@ -257,30 +299,30 @@ a { color: inherit; }
     justify-content: space-between;
     gap: 8px;
     padding: 12px 16px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid var(--line);
 }
 .modal-head h2 { margin: 0; font-size: 17px; }
 .modal-tools { display: flex; gap: 8px; flex-wrap: wrap; }
 .tool-btn {
-    padding: 6px 12px;
+    padding: 7px 12px;
     border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.1);
-    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--line);
+    background: var(--bg-elev);
     color: var(--fg);
     font-size: 13px;
     cursor: pointer;
 }
 .tool-btn:active { transform: scale(0.96); }
-.tool-btn.danger { color: var(--warn); border-color: rgba(255,122,89,0.4); }
+.tool-btn.danger { color: var(--pass); border-color: rgba(255,68,88,0.35); }
 
 /* Gallery grid */
 .gallery-grid {
     flex: 1 1 auto;
     overflow: auto;
-    padding: 12px;
+    padding: 10px;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 6px;
     align-content: start;
 }
 .tile {
@@ -307,20 +349,20 @@ a { color: inherit; }
 .tile:focus-within .tile-overlay { opacity: 1; }
 @media (hover: none) { .tile-overlay { opacity: 1; } }
 .tile-btn {
-    width: 30px; height: 30px;
+    width: 28px; height: 28px;
     border-radius: 50%;
     border: none;
-    background: rgba(0,0,0,0.6);
+    background: rgba(0,0,0,0.65);
     color: white;
-    font-size: 13px;
+    font-size: 12px;
     cursor: pointer;
 }
-.tile-btn.danger { background: rgba(255,93,143,0.85); }
+.tile-btn.danger { background: rgba(255,68,88,0.85); }
 
 .empty-state {
     text-align: center;
     color: var(--muted);
-    padding: 40px 20px;
+    padding: 40px 24px;
     line-height: 1.6;
 }
 
@@ -333,21 +375,21 @@ a { color: inherit; }
     padding: 12px 14px;
     margin-bottom: 8px;
     border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.08);
-    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--line);
+    background: var(--bg);
     color: var(--fg);
     font-size: 14px;
     cursor: pointer;
 }
-.menu-item.danger { color: var(--warn); border-color: rgba(255,122,89,0.3); }
+.menu-item.danger { color: var(--pass); border-color: rgba(255,68,88,0.3); }
 .menu-info {
     color: var(--muted);
     font-size: 12px;
     line-height: 1.6;
     margin: 12px 0 0;
 }
-.menu-info a { color: var(--like); }
-.menu-body hr { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 14px 0; }
+.menu-info a { color: var(--info); }
+.menu-body hr { border: none; border-top: 1px solid var(--line); margin: 14px 0; }
 
 /* Lightbox */
 .lightbox {
@@ -368,7 +410,8 @@ a { color: inherit; }
 }
 .lightbox-close {
     position: absolute;
-    top: 12px; right: 16px;
+    top: calc(12px + env(safe-area-inset-top));
+    right: 16px;
     width: 40px; height: 40px;
     border-radius: 50%;
     border: none;
@@ -379,7 +422,7 @@ a { color: inherit; }
 }
 .lightbox-link {
     position: absolute;
-    bottom: 20px;
+    bottom: calc(20px + env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
     padding: 8px 16px;
@@ -388,4 +431,24 @@ a { color: inherit; }
     color: white;
     text-decoration: none;
     font-size: 14px;
+}
+
+/* Mobile fine-tuning */
+@media (max-width: 480px) {
+    :root { --topbar-h: 48px; }
+    .brand-text { display: none; }
+    .stage { padding: 8px 8px 6px; gap: 8px; }
+    .stamp { font-size: 30px; padding: 4px 12px; border-width: 4px; }
+    .action-btn { width: 56px; height: 56px; }
+    .action-like { width: 60px; height: 60px; }
+    .action-undo { width: 42px; height: 42px; }
+}
+
+/* Short-screen fallback (landscape phones, etc.) */
+@media (max-height: 600px) {
+    .hint { display: none; }
+    .actions { gap: 14px; }
+    .action-btn { width: 50px; height: 50px; }
+    .action-like { width: 54px; height: 54px; }
+    .action-undo { width: 38px; height: 38px; }
 }
