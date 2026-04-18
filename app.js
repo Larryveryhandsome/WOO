@@ -2,10 +2,12 @@
 // All preferences live in localStorage; nothing is uploaded.
 
 const FEED_HOST = 'https://hornydragon.blogspot.com';
-const BATCH = 150;            // posts per JSONP request
-const MAX_BATCHES = 60;       // hard ceiling; ~9000 posts
-const PRELOAD_AHEAD = 3;      // how many upcoming images to preload
+const FIRST_BATCH = 25;       // small first request so the UI shows up fast
+const BATCH = 100;            // posts per subsequent JSONP request
+const MAX_POSTS = 9000;       // hard ceiling
+const PRELOAD_AHEAD = 4;      // how many upcoming images to preload
 const STACK_VISIBLE = 3;      // how many cards rendered at once
+const IMG_SIZE = 's1200';     // big enough for retina, smaller than s1600
 
 const LS_LIKED  = 'meme_liked_v1';
 const LS_PASSED = 'meme_passed_v1';
@@ -38,8 +40,8 @@ function jsonp(url) {
     });
 }
 
-async function fetchBatch(startIndex) {
-    const url = `${FEED_HOST}/feeds/posts/default?alt=json-in-script&max-results=${BATCH}&start-index=${startIndex}`;
+async function fetchBatch(startIndex, max) {
+    const url = `${FEED_HOST}/feeds/posts/default?alt=json-in-script&max-results=${max}&start-index=${startIndex}`;
     const data = await jsonp(url);
     return data?.feed?.entry ?? [];
 }
@@ -69,9 +71,9 @@ function extractImages(html) {
 
 function upscale(url) {
     return url
-        .replace(/\/s\d+(-c)?\//, '/s1600/')
-        .replace(/=s\d+(-c)?(-[a-z]+)?$/, '=s1600')
-        .replace(/\/w\d+-h\d+(-[a-z-]+)?\//, '/s1600/');
+        .replace(/\/s\d+(-c)?\//, `/${IMG_SIZE}/`)
+        .replace(/=s\d+(-c)?(-[a-z]+)?$/, `=${IMG_SIZE}`)
+        .replace(/\/w\d+-h\d+(-[a-z-]+)?\//, `/${IMG_SIZE}/`);
 }
 
 function entryToCards(entry) {
@@ -96,8 +98,9 @@ let totalLoaded = 0;
 
 async function loadMore() {
     if (exhausted) return;
+    const want = totalLoaded === 0 ? FIRST_BATCH : BATCH;
     try {
-        const entries = await fetchBatch(nextStart);
+        const entries = await fetchBatch(nextStart, want);
         if (!entries.length) { exhausted = true; return; }
         nextStart += entries.length;
         totalLoaded += entries.length;
@@ -106,7 +109,7 @@ async function loadMore() {
                 if (!seen.has(card.id)) queue.push(card);
             }
         }
-        if (entries.length < BATCH || nextStart > BATCH * MAX_BATCHES) exhausted = true;
+        if (entries.length < want || nextStart > MAX_POSTS) exhausted = true;
         updateLoadedInfo();
     } catch (err) {
         console.error('loadMore failed', err);
@@ -172,9 +175,8 @@ function makeCardEl(card, depth) {
     div.style.setProperty('--depth', depth);
     div.dataset.id = card.id;
     div.innerHTML = `
-        <img class="card-img" src="${card.img}" alt="" draggable="false"
-             onerror="this.closest('.card').classList.add('img-failed')">
-        <div class="img-fallback">圖片載入失敗</div>
+        <img class="card-img" src="${card.img}" alt="" draggable="false">
+        <div class="img-fallback">圖片載入失敗，自動跳過…</div>
         <div class="card-overlay">
             <div class="card-title">${escapeHtml(card.title || '(無標題)')}</div>
             <a class="card-link" href="${card.post}" target="_blank" rel="noopener" onclick="event.stopPropagation()">查看原文 ↗</a>
@@ -182,6 +184,12 @@ function makeCardEl(card, depth) {
         <div class="stamp stamp-like">LIKE</div>
         <div class="stamp stamp-pass">NOPE</div>
     `;
+    const img = div.querySelector('.card-img');
+    img.addEventListener('error', () => {
+        div.classList.add('img-failed');
+        // Only auto-skip if this is the top card the user is currently viewing
+        if (depth === 0) setTimeout(() => commitSwipe('pass'), 250);
+    });
     return div;
 }
 
@@ -425,7 +433,7 @@ async function boot() {
     // Keep filling in the background
     (async function backgroundFill() {
         while (!exhausted) {
-            await new Promise(r => setTimeout(r, 800));
+            await new Promise(r => setTimeout(r, 200));
             await loadMore();
             if (queue.length && stack.children.length === 0) renderStack();
             updateLoadedInfo();
