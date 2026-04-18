@@ -9,19 +9,17 @@
 </head>
 <body>
     <header class="topbar">
+        <button id="btn-menu" class="icon-btn" aria-label="選單">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg>
+        </button>
         <div class="brand">
             <span class="logo">🐉</span>
-            <span class="brand-text">Meme Swipe</span>
+            <span class="brand-text">memes</span>
         </div>
-        <div class="counters">
-            <button id="btn-liked" class="chip chip-like" title="查看我喜歡的迷因">
-                <span>❤️</span><span id="count-liked">0</span>
-            </button>
-            <button id="btn-passed" class="chip chip-pass" title="查看跳過的">
-                <span>✖️</span><span id="count-passed">0</span>
-            </button>
-            <button id="btn-menu" class="chip chip-menu" title="選單">⚙️</button>
-        </div>
+        <button id="btn-liked" class="icon-btn liked-btn" aria-label="我的收藏">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0112 6a5.5 5.5 0 019.5 6c-2.5 4.5-9.5 9-9.5 9z" fill="currentColor"/></svg>
+            <span id="count-liked" class="liked-badge">0</span>
+        </button>
     </header>
 
     <main class="stage">
@@ -30,18 +28,20 @@
 
         <div class="actions">
             <button id="btn-pass" class="action-btn action-pass" aria-label="跳過">
-                <svg viewBox="0 0 24 24" width="32" height="32"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"/></svg>
+                <svg viewBox="0 0 24 24" width="30" height="30"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"/></svg>
             </button>
             <button id="btn-undo" class="action-btn action-undo" aria-label="復原上一張">
-                <svg viewBox="0 0 24 24" width="26" height="26"><path d="M9 14l-5-5 5-5M4 9h10a6 6 0 016 6v0a6 6 0 01-6 6h-3" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                <svg viewBox="0 0 24 24" width="22" height="22"><path d="M9 14l-5-5 5-5M4 9h10a6 6 0 016 6v0a6 6 0 01-6 6h-3" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
             </button>
             <button id="btn-like" class="action-btn action-like" aria-label="喜歡">
                 <svg viewBox="0 0 24 24" width="32" height="32"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0112 6a5.5 5.5 0 019.5 6c-2.5 4.5-9.5 9-9.5 9z" fill="currentColor"/></svg>
             </button>
         </div>
 
-        <div class="hint">← 跳過 ・ → 喜歡 ・ ↑ 開啟原文 ・ z 復原</div>
+        <div class="hint">← 跳過 ・ → 喜歡 ・ ↑ 看原文 ・ z 復原</div>
     </main>
+
+    <span id="count-passed" hidden>0</span>
 
     <!-- Liked gallery -->
     <div id="gallery" class="modal" hidden>

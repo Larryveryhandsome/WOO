@@ -131,6 +131,7 @@ const countPassedEl = $('#count-passed');
 
 function updateCounters() {
     countLikedEl.textContent  = liked.length;
+    countLikedEl.dataset.empty = liked.length === 0;
     countPassedEl.textContent = passed.length;
 }
 function updateLoadedInfo() {
@@ -171,17 +172,15 @@ function makeCardEl(card, depth) {
     div.style.setProperty('--depth', depth);
     div.dataset.id = card.id;
     div.innerHTML = `
-        <div class="card-img-wrap">
-            <img class="card-img" src="${card.img}" alt="" draggable="false"
-                 onerror="this.parentElement.classList.add('img-failed')">
-            <div class="img-fallback">圖片載入失敗</div>
-        </div>
-        <div class="card-meta">
+        <img class="card-img" src="${card.img}" alt="" draggable="false"
+             onerror="this.closest('.card').classList.add('img-failed')">
+        <div class="img-fallback">圖片載入失敗</div>
+        <div class="card-overlay">
             <div class="card-title">${escapeHtml(card.title || '(無標題)')}</div>
             <a class="card-link" href="${card.post}" target="_blank" rel="noopener" onclick="event.stopPropagation()">查看原文 ↗</a>
         </div>
-        <div class="stamp stamp-like">喜歡</div>
-        <div class="stamp stamp-pass">跳過</div>
+        <div class="stamp stamp-like">LIKE</div>
+        <div class="stamp stamp-pass">NOPE</div>
     `;
     return div;
 }
@@ -352,7 +351,6 @@ function refreshGallery(filter) {
 }
 
 $('#btn-liked').onclick = () => openGallery();
-$('#btn-passed').onclick = () => alert(`你已經跳過 ${passed.length} 張迷因。\n如果想再看一次，到 ⚙️ 選單裡點「把跳過全部還原」。`);
 $('#btn-close-gallery').onclick = () => gallery.hidden = true;
 
 $('#btn-export').onclick = () => {
